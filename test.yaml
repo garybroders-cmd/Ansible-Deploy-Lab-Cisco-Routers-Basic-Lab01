@@ -1,0 +1,8 @@
+- hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Show version
+      cisco.ios.ios_command:
+        commands: show ip interface brief
+      register: out
+    - debug: var=out.stdout_lines
