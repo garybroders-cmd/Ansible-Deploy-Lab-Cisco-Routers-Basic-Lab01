@@ -29,5 +29,8 @@ This environment provides:
 - Hands-on infrastructure-as-code and DevOps lab experience
 
 ### Lab Topology
+Test the playbook and connectivity.
+
+ansible-playbook -i inventory.ini test.yaml 
 
 
