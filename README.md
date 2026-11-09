@@ -21,7 +21,8 @@ This lab runs on a Raspberry Pi 5 using Docker containers for automation, manage
 
 This environment provides:
 
-- Ansible automation and orchestration
+- Ansible automation and orchestration <-- This is working of its own management interface assigned using mcxvlan (??)
+</br>
 - SSH-managed Linux hosts for testing
 - Web server deployment and configuration management
 - NGINX reverse proxy and load balancing
@@ -34,19 +35,20 @@ Test the playbook and connectivity.
 ansible-playbook -i inventory.ini test.yaml 
 
 Check the different modules 
-sudo python3 ospf_fromxls.py  <-- this does the ospf network assigned to router and interface according to the spread spreadsheet.
+sudo python3 ospf_fromxls.py  <-- this assigns the OSPF network to the router and interface according to the spreadsheet.</br>
+sudo python3 read_xlsx.py router_interfaces.xlsx <-- reads the interfaces from the Excel spreadsheet workbook called interfaces. </br>
 
 
-This updates the script on server.
+This updates the script on the server.</br>
 
-wc -l ospf_from_xlsx.py
-md5sum ospf_frm_xlsx.py
-sudo python -m py_compile ospf_from_xlsx.py && echo OK
+wc -l ospf_from_xlsx.py</br>
+md5sum ospf_frm_xlsx.py</br>
+sudo python -m py_compile ospf_from_xlsx.py && echo OK</br>
 
-to configure routers after bootstrap is installed.
+to configure routers after bootstrap is installed.</br>
 
-sudo ./ansible_bgp_reflector_config <-- this should be executable so that ou can run different modules or delete modules—
+sudo ./ansible_bgp_reflector_config <-- this should be executable so that ou can run different modules or delete modules—</br>
 
-sudo chmod 777 ansible_bgp_reflector_config
+sudo chmod 777 ansible_bgp_reflector_config</br>
 
 
