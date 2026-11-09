@@ -1,0 +1,2 @@
+! runs the modules of the playbook as required.
+ansible-playbook -i inventory.ini configure_from_excel.yaml
