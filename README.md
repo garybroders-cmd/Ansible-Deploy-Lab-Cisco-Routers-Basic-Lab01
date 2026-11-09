@@ -33,4 +33,20 @@ Test the playbook and connectivity.
 
 ansible-playbook -i inventory.ini test.yaml 
 
+Check the different modules 
+sudo python3 ospf_fromxls.py  <-- this does the ospf network assigned to router and interface according to the spread spreadsheet.
+
+
+This updates the script on server.
+
+wc -l ospf_from_xlsx.py
+md5sum ospf_frm_xlsx.py
+sudo python -m py_compile ospf_from_xlsx.py && echo OK
+
+to configure routers after bootstrap is installed.
+
+sudo ./ansible_bgp_reflector_config <-- this should be executable so that ou can run different modules or delete modules—
+
+sudo chmod 777 ansible_bgp_reflector_config
+
 
