@@ -40,8 +40,10 @@
     - name: Split spreadsheet interfaces into with-IP and blank-IP
       ansible.builtin.set_fact:
         sheet_all: "{{ hostvars['localhost'].excel_data[inventory_hostname] }}"
-        sheet_with_ip: "{{ hostvars['localhost'].excel_data[inventory_hostname] | selectattr('ip_address', 'defined') | selectattr('subnet_mask', 'defined') | list }}"
-        sheet_blank_ip: "{{ hostvars['localhost'].excel_data[inventory_hostname] | rejectattr('ip_address', 'defined') | map(attribute='interface') | list }}"
+        sheet_with_ip: "{{ hostvars['localhost'].excel_data[inventory_hostname] | selectattr('ip_address', 'defined') | selectattr('subnet_mask',
+ 'defined') | list }}"
+        sheet_blank_ip: "{{ hostvars['localhost'].excel_data[inventory_hostname] | rejectattr('ip_address', 'defined') | map(attribute='interface
+') | list }}"
 
     - name: Read interface status
       cisco.ios.ios_command:
@@ -99,7 +101,8 @@
     - name: Work out what else needs cleaning up
       ansible.builtin.set_fact:
         unassigned_on: "{{ brief_mid.stdout[0] | regex_findall(re_unassigned_on) | difference([mgmt_if]) }}"
-        unlisted_with_ip: "{{ (brief_mid.stdout[0] | regex_findall(re_any_with_ip)) | difference(sheet_all | map(attribute='interface') | list) | difference([mgmt_if]) }}"
+        unlisted_with_ip: "{{ (brief_mid.stdout[0] | regex_findall(re_any_with_ip)) | difference(sheet_all | map(attribute='interface') | list) |
+ difference([mgmt_if]) }}"
 
     - name: Show cleanup plan
       ansible.builtin.debug:
