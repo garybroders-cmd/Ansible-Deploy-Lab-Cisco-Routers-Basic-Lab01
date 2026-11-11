@@ -1,0 +1,53 @@
+---
+- name: Configure BGP from spreadsheet
+  hosts: routers
+  gather_facts: false
+  connection: network_cli
+
+  vars:
+    xlsx: "{{ playbook_dir }}/router_interfaces.xlsx"
+
+  tasks:
+
+    - name: Read BGP data for this host from the spreadsheet
+      ansible.builtin.command:
+        cmd: >
+          python3 {{ playbook_dir }}/bgp/bgp_from_xlsx.py
+          {{ xlsx }}
+          {{ inventory_hostname }}
+      delegate_to: localhost
+      changed_when: false
+      register: bgp_json
+
+    - name: Load BGP variables
+      ansible.builtin.set_fact:
+        bgp: "{{ (bgp_json.stdout | from_json).bgp }}"
+
+    - name: Display BGP variables
+      ansible.builtin.debug:
+        var: bgp
+
+    - name: Render BGP template
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/bgp/bgp.j2"
+        dest: "/tmp/{{ inventory_hostname }}_bgp.cfg"
+      delegate_to: localhost
+
+    - name: Show rendered configuration
+      ansible.builtin.command:
+        cmd: cat /tmp/{{ inventory_hostname }}_bgp.cfg
+      delegate_to: localhost
+      changed_when: false
+      register: rendered_cfg
+
+    - name: Display rendered configuration
+      ansible.builtin.debug:
+        var: rendered_cfg.stdout_lines
+
+    - name: Push BGP config
+      cisco.ios.ios_config:
+        src: "/tmp/{{ inventory_hostname }}_bgp.cfg"
+
+    - name: Save configuration
+      cisco.ios.ios_config:
+        save_when: modified
