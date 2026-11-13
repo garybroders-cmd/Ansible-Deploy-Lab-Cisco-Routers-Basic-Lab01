@@ -1,8 +1,0 @@
-! this you to connect old time cisoc routers on that ssh sha.
-! sudo nano ~/.ssh/config
-
-Host <ip address subnet>.*
-    User ansible
-    KexAlgorithms +diffie-hellman-group14-sha1
-    HostKeyAlgorithms +ssh-rsa
-    PubkeyAcceptedAlgorithms +ssh-rsa
