@@ -1,1 +1,33 @@
-
+# Disclaimer !!!
+#
+# For Lab Use Only: This code is provided for testing, educational, and proof-of-concept purposes only.
+# It has not been validated for production use and is provided without warranty of any kind. Users are
+# responsible for reviewing, testing, and securing the code before deployment. The author accepts no
+# liability for any damages or losses resulting from its use.
+#
+# Mr Gary Broderick - Updated 9th Nov 2026 and ospf routing protocol.
+#
+# Install interfaces and IP addresses
+#
+# 10 Nov 2026 - added bgp configuration and removed banners for routers
+#
+# This configure the interfaces and interfaces for each router for project or site.
+# make this file executable chomod 775 lab1.
+# run as >> #  ./lab1
+#
+ansible-playbook -i inventory.ini configure_from_excel.yaml
+#
+# install ospf routing
+#
+ansible-playbook -i inventory.ini push_ospf.yaml
+#
+# configure BGP
+#
+ansible-playbook -i inventory.ini bgp_playbook.yaml
+#
+# Remove banners from cisco routers
+#
+ansible-playbook -i inventory.ini remove_banners.yaml
+#
+#
+#
