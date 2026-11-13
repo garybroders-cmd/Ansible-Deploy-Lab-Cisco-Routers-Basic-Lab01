@@ -1,0 +1,37 @@
+router bgp {{ bgp.asn }}
+ bgp router-id {{ bgp.router_id }}
+{% if bgp.cluster_id %}
+ bgp cluster-id {{ bgp.cluster_id }}
+{% endif %}
+{% if bgp.log_neighbor_changes %}
+ bgp log-neighbor-changes
+{% endif %}
+{% if not bgp.default_ipv4_unicast %}
+ no bgp default ipv4-unicast
+{% endif %}
+{% for g in bgp.peer_groups %}
+ neighbor {{ g.peer_group }} peer-group
+ neighbor {{ g.peer_group }} remote-as {{ g.remote_as }}
+{% if g.update_source %}
+ neighbor {{ g.peer_group }} update-source {{ g.update_source }}
+{% endif %}
+{% endfor %}
+{% for n in bgp.neighbors %}
+{% if n.peer_group %}
+ neighbor {{ n.neighbor_ip }} peer-group {{ n.peer_group }}
+{% else %}
+ neighbor {{ n.neighbor_ip }} remote-as {{ n.remote_as }}
+{% if n.update_source %}
+ neighbor {{ n.neighbor_ip }} update-source {{ n.update_source }}
+{% endif %}
+{% endif %}
+{% endfor %}
+ !
+ address-family ipv4
+{% for g in bgp.peer_groups if g.route_reflector_client %}
+  neighbor {{ g.peer_group }} route-reflector-client
+{% endfor %}
+{% for n in bgp.neighbors if n.activate %}
+  neighbor {{ n.neighbor_ip }} activate
+{% endfor %}
+ exit-address-family
