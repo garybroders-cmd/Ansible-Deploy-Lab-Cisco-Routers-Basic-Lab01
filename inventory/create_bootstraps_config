@@ -1,0 +1,9 @@
+# This will create a boot config file that can be uploaded to the router or switch.
+# chmod 775 to make executable.
+# ./create_bootstraps_confg
+# this will create a bootstrap dir.
+# copy the file to the designated router.
+# Gary Broderick
+
+python3 bootstrap_from_xlsx.py -x router_interfaces.xlsm
+~
