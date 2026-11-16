@@ -1,0 +1,21 @@
+{% for proc in ospf.processes %}
+router ospf {{ proc.process_id }}
+{% if proc.router_id %}
+ router-id {{ proc.router_id }}
+{% endif %}
+{% for name in proc.passive %}
+ passive-interface {{ name }}
+{% endfor %}
+!
+{% for intf in proc.interfaces %}
+interface {{ intf.name }}
+ ip ospf {{ proc.process_id }} area {{ intf.area }}
+{% if intf.cost is not none %}
+ ip ospf cost {{ intf.cost }}
+{% endif %}
+{% if intf.network_type %}
+ ip ospf network {{ intf.network_type }}
+{% endif %}
+!
+{% endfor %}
+{% endfor %}
