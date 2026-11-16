@@ -52,3 +52,6 @@ sudo ./ansible_bgp_reflector_config <-- this should be executable so that ou can
 sudo chmod 777 ansible_bgp_reflector_config</br>
 
 
+<img width="1027" height="245" alt="image" src="https://github.com/user-attachments/assets/c49e25c8-a687-4c7b-af3f-a859bdb82d1c" />
+
+
