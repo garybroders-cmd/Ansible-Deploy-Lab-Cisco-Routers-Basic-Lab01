@@ -4,64 +4,33 @@
 
 
 # Ansible-Deploy-Lab-Cisco-Routers-Basic-Lab01
-Ansible to configure a basic router lab. Stage 1 
+
+I set up a Raspberry Pi 5 as an Ansible server to automate router configuration. Device details live in an Excel spreadsheet, and a Python 3 script reads that data and runs the right playbooks against each router, so there’s no more configuring them one by one.
 
 ## Docker Lab Environment (Raspberry Pi 5)
 
 This lab runs on a Raspberry Pi 5 using Docker containers for automation, management, and web application testing.
 
-### Containers
-
-- Flocio-az
-- Portainer
-- Ansible
-- Alpine SSH 1
-- Alpine SSH 2
-- Alpine SSH 3
-- NGINX
-- Web Server 1
-- Web Server 2
-
 ### Purpose
 
 This environment provides:
 
-- Ansible automation and orchestration <-- This is working of its own management interface assigned using mcxvlan (??)
-</br>
-- SSH-managed Linux hosts for testing
-- Web server deployment and configuration management
-- NGINX reverse proxy and load balancing
-- Container management through Portainer
-- Hands-on infrastructure-as-code and DevOps lab experience
-
-### Lab Topology
-Test the playbook and connectivity.
-
-ansible-playbook -i inventory.ini test.yaml 
-
-Check the different modules 
-sudo python3 ospf_fromxls.py  <-- this assigns the OSPF network to the router and interface according to the spreadsheet.</br>
-sudo python3 read_xlsx.py router_interfaces.xlsx <-- reads the interfaces from the Excel spreadsheet workbook called interfaces. </br>
+- Ansible automation and orchestration</br>
 
 
-This updates the script on the server.</br>
+### The Files Purpose
+./create_bootstraps_configs - This will look at the router_interafces.xlsm interfaces and write a simple bootstrap configuration for routers to be accessed by the ansible rapsberry pi.  Configs are stored in a directory called bootstraps.</br>
 
-wc -l ospf_from_xlsx.py</br>
-md5sum ospf_frm_xlsx.py</br>
-sudo python -m py_compile ospf_from_xlsx.py && echo OK</br>
+<img width="1033" height="638" alt="image" src="https://github.com/user-attachments/assets/d52c5876-5ecd-4beb-b577-1cf3b963eeef" />
 
-to configure routers after bootstrap is installed.</br>
+Copy these configurations to each router, etc.</br>
 
-sudo ./ansible_bgp_reflector_config <-- this should be executable so that ou can run different modules or delete modules—</br>
-
-sudo chmod 777 ansible_bgp_reflector_config</br>
+./lab1 - Run the Ansible playbook against the devices listed in inventory.ini, then call the playbook for each protocol (for example, bgp_playbook.yaml). I deliberately run them one at a time so I can troubleshoot faults and make changes as I go. Each protocol has its own folder holding its playbook and templates.</br>
+more ansi  
+The bgp.j2 file is a Jinja2 template that generates each router’s BGP configuration. Rather than writing a separate config for every router, I write one template with placeholders, and Ansible fills in each device’s values (AS number, neighbors, networks) when the playbook runs.</br>
 
 
-<img width="1486" height="350" alt="image" src="https://github.com/user-attachments/assets/05b0b1e4-f43e-4051-a43c-dc1bb17820b8" />
 
-H5 is automatically translated into a subnet.
-
-<img width="1482" height="343" alt="image" src="https://github.com/user-attachments/assets/fabeaa35-13fc-42f8-bc07-e846d337637f" />
 
 
 
