@@ -52,6 +52,13 @@ sudo ./ansible_bgp_reflector_config <-- this should be executable so that ou can
 sudo chmod 777 ansible_bgp_reflector_config</br>
 
 
-<img width="1027" height="245" alt="image" src="https://github.com/user-attachments/assets/c49e25c8-a687-4c7b-af3f-a859bdb82d1c" />
+<img width="1486" height="350" alt="image" src="https://github.com/user-attachments/assets/05b0b1e4-f43e-4051-a43c-dc1bb17820b8" />
+
+H5 is automatically translated into a subnet.
+
+<img width="1482" height="343" alt="image" src="https://github.com/user-attachments/assets/fabeaa35-13fc-42f8-bc07-e846d337637f" />
+
+
+
 
 
