@@ -1,3 +1,8 @@
+<img width="1465" height="808" alt="image" src="https://github.com/user-attachments/assets/3028b681-ec1a-4bc3-9302-7829ad91fe5c" />
+
+
+
+
 # Ansible-Deploy-Lab-Cisco-Routers-Basic-Lab01
 Ansible to configure a basic router lab. Stage 1 
 
