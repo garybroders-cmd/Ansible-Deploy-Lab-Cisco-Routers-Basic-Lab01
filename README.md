@@ -5,6 +5,8 @@
 
 # Ansible-Deploy-Lab-Cisco-Routers-Basic-Lab01
 
+Status: work in progress. The inventory files currently provide the basics: connecting to each router and configuring its WAN and LAN interfaces. More protocols and features will be added as the project develops.</>
+
 I set up a Raspberry Pi 5 as an Ansible server to automate router configuration. Device details live in an Excel spreadsheet, and a Python 3 script reads that data and runs the right playbooks against each router, so there’s no more configuring them one by one.
 
 ## Docker Lab Environment (Raspberry Pi 5)
@@ -21,7 +23,11 @@ This environment provides:
 ### The Files Purpose
 ./create_bootstraps_configs - This will look at the router_interafces.xlsm interfaces and write a simple bootstrap configuration for routers to be accessed by the ansible rapsberry pi.  Configs are stored in a directory called bootstraps.</br>
 
-<img width="1033" height="638" alt="image" src="https://github.com/user-attachments/assets/d52c5876-5ecd-4beb-b577-1cf3b963eeef" />
+<img width="889" height="514" alt="image" src="https://github.com/user-attachments/assets/a3c41ca8-7518-4642-a3e1-19da943a6a42" />
+
+
+My Directory Structure running in a python virtual environment. 
+
 
 Copy these configurations to each router, etc.</br>
 
