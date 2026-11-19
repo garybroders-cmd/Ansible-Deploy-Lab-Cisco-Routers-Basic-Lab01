@@ -35,6 +35,13 @@ Copy these configurations to each router, etc.</br>
 more ansi  
 The bgp.j2 file is a Jinja2 template that generates each router’s BGP configuration. Rather than writing a separate config for every router, I write one template with placeholders, and Ansible fills in each device’s values (AS number, neighbors, networks) when the playbook runs.</br>
 
+Amended the /ospf Python files so I can see the test LAN on the two relectore routers and advertised via BGP.
+
+<img width="984" height="859" alt="image" src="https://github.com/user-attachments/assets/e59581e9-f074-450a-bc2c-a9ccaac6ee81" />
+
+
+
+
 
 
 
