@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+GB - updated 19/11/2026 - Notes below:-
 ospf_from_xlsx.py <workbook.xlsm> <hostname> [--sheet NAME]
 
 Reads the OSPF data for ONE host from the workbook and prints it as JSON:
@@ -15,19 +16,27 @@ Sources
   * protocol_ospf sheet, range A2:J60 (header on row 1):
       hostname, interface, protocol, process_id, router_id, area, cost,
       network_type, passive, subnet
-    A blank hostname cell takes the hostname from the row above.
   * Interfaces sheet (hostname, interface_N / ip_address_N / subnet_mask_N / description_N):
-      - any interface with an IP address that is NOT listed on protocol_ospf is added
-        with the host's own process / area / cost (management interfaces are skipped);
-      - a host with no protocol_ospf rows at all is built entirely from this sheet
-        (router-id = its Loopback0 address).
+      used ONLY to check that an interface exists on the host, to read Loopback0
+      (router-id fallback) and to see the prefix length (/30 or /31 => point-to-point).
+
+Which interfaces get "ip ospf" commands
+  An interface gets ip ospf commands ONLY when its protocol_ospf row has ALL of:
+    - a hostname (a blank hostname is NOT filled down from the row above),
+    - a process_id,
+    - an area,
+    - an interface that is listed for that host on the Interfaces sheet.
+  A row failing any of these is skipped with a WARNING and gets no ip ospf, no
+  passive-interface and no router-id contribution. Interfaces that are not on
+  protocol_ospf at all also get nothing (they are no longer added automatically).
+  A host with no usable rows produces {"ospf": {"processes": []}}.
 
 Rules
   * Loopback interfaces NEVER get an "ip ospf network" line.
   * A physical /30 or /31 interface with a blank network_type gets point-to-point.
   * Hostnames match the inventory name ignoring case, punctuation and domain suffix
     (ivos3 = iVOS-3 = ivos3.lab.local).
-  * Warnings go to stderr; stdout is JSON only. Exit code 2 if the host is not found.
+  * Warnings go to stderr; stdout is JSON only. Exit code 2 if the host is on neither sheet.
 """
 import argparse
 import ipaddress
@@ -118,28 +127,28 @@ def find_sheet(wb, requested):
 
 
 def read_rows(ws, max_col):
-    """Header from row 1, data rows FIRST_ROW..LAST_ROW; hostname filled down."""
+    """Header from row 1, data rows FIRST_ROW..LAST_ROW. A blank hostname stays None."""
     header_row = next(ws.iter_rows(min_row=1, max_row=1, max_col=max_col, values_only=True), ())
     header = [str(h).strip().lower() if h is not None else "" for h in header_row]
-    out, last_host = [], None
+    out = []
     for number, row in enumerate(ws.iter_rows(min_row=FIRST_ROW, max_row=LAST_ROW,
                                                max_col=max_col, values_only=True), start=FIRST_ROW):
         if all(c is None or str(c).strip() == "" for c in row):
             continue
         rec = dict(zip(header, row))
         rec["_row"] = number
-        if clean(rec.get("hostname")):
-            last_host = clean(rec["hostname"])
-        rec["hostname"] = last_host
+        rec["hostname"] = clean(rec.get("hostname"))
         out.append(rec)
     return header, out
 
 
 def load_interfaces(wb, host):
-    """[(ifname, ip, mask, description)] for the host from the Interfaces sheet."""
+    """[(ifname, ip, mask, description)] for every interface the Interfaces sheet lists
+    for the host. ip / mask are None for an interface that has no address."""
     names = {n.lower(): n for n in wb.sheetnames}
     if "interfaces" not in names:
-        return []
+        die("Interfaces sheet not found; it is needed to check that each interface exists. "
+            f"Sheets in workbook: {wb.sheetnames}")
     ws = wb[names["interfaces"]]
     _, rows = read_rows(ws, ws.max_column)
     found = []
@@ -151,7 +160,7 @@ def load_interfaces(wb, host):
             ifname = norm_iface(clean(rec.get(f"interface_{index}")))
             ip = clean(rec.get(f"ip_address_{index}"))
             mask = clean(rec.get(f"subnet_mask_{index}"))
-            if ifname and ip and mask:
+            if ifname:
                 found.append((ifname, ip, mask, clean(rec.get(f"description_{index}")) or ""))
             index += 1
     return found
@@ -185,22 +194,19 @@ def main():
 
     mine = [r for r in rows if r["hostname"] and same_host(r["hostname"], host)]
     iface_sheet = load_interfaces(wb, host)
-    iface_ip = {n.lower(): (ip, mask) for n, ip, mask, _ in iface_sheet}
+    iface_exists = {n.lower() for n, _, _, _ in iface_sheet}
+    iface_ip = {n.lower(): (ip, mask) for n, ip, mask, _ in iface_sheet if ip and mask}
+
+    # Rows with no hostname cannot be tied to any router, so they configure nothing.
+    for rec in rows:
+        if not rec["hostname"] and clean(rec.get("interface")):
+            warn(f"{ws.title}!row {rec['_row']}: hostname is blank; no ip ospf applied to "
+                 f"{clean(rec.get('interface'))}")
 
     if not mine and not iface_sheet:
         known = sorted({r["hostname"] for r in rows if r["hostname"]})
         die(f"host {host!r} not found on {ws.title!r} (A{FIRST_ROW}:J{LAST_ROW}) or the "
             f"Interfaces sheet. Hostnames on {ws.title!r}: {known}", code=2)
-
-    # Defaults for interfaces not listed on the OSPF sheet: this host's first row,
-    # else the first row of any host, else process 1 / area 0 / cost 100.
-    basis = mine[0] if mine else (rows[0] if rows else None)
-    if basis:
-        default = (to_num(basis.get("process_id")), to_num(basis.get("area")), to_num(basis.get("cost")))
-    else:
-        default = (1, 0, 100)
-    if default[0] is None or default[1] is None:
-        default = (1, 0, 100)
 
     procs = OrderedDict()   # pid -> {"router_id", "passive", "interfaces": OrderedDict}
 
@@ -213,11 +219,16 @@ def main():
         where = f"{ws.title}!row {rec['_row']}"
         ifname = norm_iface(clean(rec.get("interface")))
         if not ifname:
-            errors.append(f"{where}: interface is blank for {host}")
+            warn(f"{where}: interface is blank for {host}; row skipped")
             continue
         pid, area = to_num(rec.get("process_id")), to_num(rec.get("area"))
-        if pid is None or area is None:
-            errors.append(f"{where}: process_id and area are required ({host} {ifname})")
+        blanks = [label for label, value in (("process_id", pid), ("area", area)) if value is None]
+        if blanks:
+            warn(f"{where}: {host} {ifname}: {' and '.join(blanks)} blank; no ip ospf applied")
+            continue
+        if ifname.lower() not in iface_exists:
+            warn(f"{where}: {host} {ifname} is not on the Interfaces sheet for this host; "
+                 f"no ip ospf applied")
             continue
         proc = proc_for(pid)
 
@@ -260,25 +271,8 @@ def main():
     if errors:
         die("\n  ".join(["problems in the workbook:"] + errors))
 
-    # Add IP-addressed interfaces that the OSPF sheet does not list.
-    d_pid, d_area, d_cost = default
-    if not procs and iface_sheet:
-        warn(f"{host}: no rows on {ws.title!r}; building OSPF from the Interfaces sheet "
-             f"(process {d_pid}, area {d_area}, cost {d_cost})")
-    for ifname, ip, mask, desc in iface_sheet:
-        pid = next(iter(procs), d_pid)
-        proc = proc_for(pid)
-        if ifname.lower() in proc["interfaces"]:
-            continue
-        if "manage" in desc.lower():
-            warn(f"{host} {ifname}: management interface - not added to OSPF")
-            continue
-        plen = prefixlen(ip, mask)
-        net = ("point-to-point" if not ifname.lower().startswith("loopback")
-               and plen is not None and plen >= 30 else None)
-        proc["interfaces"][ifname.lower()] = {"name": ifname, "area": d_area,
-                                              "cost": d_cost, "network_type": net}
-        warn(f"{host} {ifname} ({ip}/{plen}) is not on {ws.title!r}; added from the Interfaces sheet")
+    if not procs:
+        warn(f"{host}: no usable rows on {ws.title!r}; no ip ospf configuration will be generated")
 
     for pid, proc in procs.items():
         if not proc["router_id"]:
