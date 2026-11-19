@@ -1,21 +1,27 @@
-{% for proc in ospf.processes %}
+{# GB 19 Nov 2026 - Nothing is rendered for an interface (or a process) that does not meet that. #}
+{% for proc in (ospf | default({})).processes | default([]) if proc.process_id is defined and proc.process_id is n
+ot none %}
+{% set valid_intfs = proc.interfaces | default([]) | selectattr('name', 'defined') | selectattr('name') | selectat
+tr('area', 'defined') | rejectattr('area', 'none') | list %}
+{% if valid_intfs %}
 router ospf {{ proc.process_id }}
 {% if proc.router_id %}
  router-id {{ proc.router_id }}
 {% endif %}
-{% for name in proc.passive %}
+{% for name in proc.passive | default([]) if name in valid_intfs | map(attribute='name') %}
  passive-interface {{ name }}
 {% endfor %}
 !
-{% for intf in proc.interfaces %}
+{% for intf in valid_intfs %}
 interface {{ intf.name }}
  ip ospf {{ proc.process_id }} area {{ intf.area }}
-{% if intf.cost is not none %}
+{% if intf.cost is defined and intf.cost is not none %}
  ip ospf cost {{ intf.cost }}
 {% endif %}
-{% if intf.network_type %}
+{% if intf.network_type is defined and intf.network_type %}
  ip ospf network {{ intf.network_type }}
 {% endif %}
 !
 {% endfor %}
+{% endif %}
 {% endfor %}
